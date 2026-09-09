@@ -1,0 +1,58 @@
+# Modèles et fichiers lourds — restent sur Google Drive, jamais dans Git
+*.pth
+*.index
+*.ckpt
+*.onnx
+*.pt
+
+# Audio — jamais dans Git
+*.wav
+*.mp3
+*.flac
+*.ogg
+*.m4a
+
+# Datasets
+dataset/
+*_Dataset/
+datasets/
+
+# Archives / exports
+*.zip
+*.tar
+*.tar.gz
+
+# Configuration locale (contient des chemins personnels, jamais des secrets,
+# mais reste local — seul config.example.json est versionné)
+config/config.json
+
+# Environnements et caches Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+env/
+*.egg-info/
+
+# Notebooks Jupyter/Colab
+.ipynb_checkpoints/
+
+# Applio lui-même (cloné à chaque session Colab, jamais versionné ici)
+Applio/
+
+# Logs et fichiers temporaires
+*.log
+/tmp/
+debug_log.txt
+
+# Secrets / identifiants — ne doivent JAMAIS être commités
+*.env
+credentials.json
+token.json
+*.key
+service_account*.json
+
+# Système
+.DS_Store
+Thumbs.db

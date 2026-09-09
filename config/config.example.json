@@ -1,0 +1,42 @@
+{
+  "_comment": "Copie ce fichier en config.json et ajuste si tes chemins Drive diffèrent. config.json n'est jamais versionné (voir .gitignore).",
+
+  "model_name": "darwin",
+
+  "drive": {
+    "root": "/content/drive/MyDrive",
+    "backup_folder": "ApplioBackup",
+    "dataset_folder": "Darwin_Dataset",
+    "export_folder": "ApplioExported",
+    "input_audio": "ma_voix.wav"
+  },
+
+  "applio": {
+    "install_dir": "/content/Applio",
+    "repo_url": "https://github.com/IAHispano/Applio"
+  },
+
+  "inference": {
+    "f0_method": "rmvpe",
+    "pitch": 0,
+    "index_rate": 0.7,
+    "protect": 0.5,
+    "volume_envelope": 0.8,
+    "embedder_model": "contentvec",
+    "export_format": "WAV",
+    "clean_strength": 0.7,
+    "formant_qfrency": 1.0,
+    "formant_timbre": 1.0
+  },
+
+  "training": {
+    "_comment": "Niveau 3 — pas utilisé tant que l'inférence (Niveau 1) n'est pas validée.",
+    "sample_rate": "40k",
+    "f0_method": "rmvpe",
+    "embedder_model": "contentvec",
+    "total_epoch": 800,
+    "batch_size": 8,
+    "save_every_epoch": 10,
+    "vocoder": "HiFi-GAN"
+  }
+}
