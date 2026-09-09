@@ -69,8 +69,17 @@ def main():
         fail(f"❌ Aucun fichier .pth dans {backup_dir}")
     pth_file = str(pth_candidates[0])
 
-    index_candidates = sorted(backup_dir.glob("*.index"), key=lambda x: x.stat().st_mtime, reverse=True)
-    index_file = str(index_candidates[0]) if index_candidates else ""
+    # La CLI Applio actuelle exige un fichier .index pour l'inférence.
+    # On privilégie l'index qui porte le même nom de base que le .pth.
+    matching_index = backup_dir / f"{Path(pth_file).stem}.index"
+    if matching_index.exists():
+        index_file = str(matching_index)
+    else:
+        index_candidates = sorted(backup_dir.glob("*.index"), key=lambda x: x.stat().st_mtime, reverse=True)
+        index_file = str(index_candidates[0]) if index_candidates else ""
+
+    if not index_file:
+        fail(f"❌ Aucun fichier .index dans {backup_dir}. La version actuelle d'Applio exige --index-path pour l'inférence.")
 
     if not audio_path.exists():
         fail(f"❌ Audio introuvable : {audio_path}")
@@ -92,6 +101,7 @@ def main():
         "--input-path", str(audio_path),
         "--output-path", str(output_path),
         "--pth-path", pth_file,
+        "--index-path", index_file,
         "--clean-strength", str(p["clean_strength"]),
         "--export-format", p["export_format"],
         "--embedder-model", p["embedder_model"],
@@ -99,10 +109,11 @@ def main():
         "--formant-timbre", str(p["formant_timbre"]),
     ]
 
-    if index_file:
-        # Applio accepts the index path when one is available.
-        insert_at = cmd.index("--clean-strength")
-        cmd[insert_at:insert_at] = ["--index-path", index_file]
+    if p.get("clean_audio", False):
+        cmd.insert(cmd.index("--clean-strength"), "--clean-audio")
+
+    if p.get("formant_shifting", False):
+        cmd.insert(cmd.index("--formant-qfrency"), "--formant-shifting")
 
     log("\nCommande exécutée :")
     log(" ".join(cmd))

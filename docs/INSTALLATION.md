@@ -2,12 +2,12 @@
 
 ## 1. GitHub Desktop — une seule fois
 
-1. Décompresse ce ZIP.
+1. Décompresse le ZIP reçu.
 2. Place son contenu directement dans le dossier local du dépôt `applio-darwin` déjà créé avec GitHub Desktop.
-3. GitHub Desktop doit alors afficher les nouveaux fichiers dans **Changes**.
-4. Fais un commit initial clair, puis **Push origin**.
+3. GitHub Desktop détecte les modifications dans **Changes**.
+4. Fais le commit puis **Push origin**.
 
-Le dépôt devient la source de vérité du code et du notebook.
+Ensuite, les corrections se font de la même manière : on remplace le contenu du dépôt local par le nouveau ZIP corrigé, puis Commit → Push.
 
 ## 2. Google Drive — données persistantes
 
@@ -26,39 +26,47 @@ MyDrive/
 
 Rien de tout cela ne doit être ajouté au dépôt GitHub.
 
-## 3. Colab — aucun environnement manuel à reconstruire
+## 3. Colab — environnement entièrement reconstruit
 
 Le notebook principal est :
 
 `notebooks/Applio_Darwin_Colab.ipynb`
 
-Le principe est :
+Le pipeline est :
 
 ```text
-GitHub Desktop → GitHub
-                  ↓
-             nouveau Colab
-                  ↓
-        clone / mise à jour du dépôt
-                  ↓
-      montage automatique de Drive
-                  ↓
-      installation automatique d'Applio
-                  ↓
-           diagnostic complet
-                  ↓
-              inférence
-                  ↓
-        WAV → Google Drive
+GitHub
+  ↓
+clone / mise à jour automatique
+  ↓
+montage automatique de Google Drive
+  ↓
+création automatique de config.json
+  ↓
+installation automatique d'Applio + Python 3.12
+  ↓
+diagnostic complet
+  ↓
+inférence Niveau 1
+  ↓
+WAV → Google Drive
 ```
 
-Après une nouvelle session Colab, on ne réinstalle rien à la main dans le runtime : le dépôt est récupéré et le runtime est reconstruit.
+Aucune modification du notebook n'est nécessaire pour renseigner l'URL du dépôt : elle est déjà configurée pour `LizibaMvuluzi/applio-darwin`.
 
-## 4. URL du dépôt
+### Dépôt GitHub privé
 
-La variable `GITHUB_REPO` du notebook doit contenir l'URL de TON dépôt GitHub privé. Cette valeur n'a besoin d'être définie qu'une fois dans le notebook versionné ; elle n'est pas un secret.
+Le dépôt est privé. Le notebook utilise le gestionnaire de secrets de Colab pour récupérer `GITHUB_TOKEN` sans l'écrire dans le notebook ni dans Git.
 
-## 5. Ordre de travail
+À faire une seule fois dans Colab :
+
+1. ouvrir l'onglet **🔑 Secrets** ;
+2. créer le secret `GITHUB_TOKEN` ;
+3. activer **Notebook access** pour ce notebook.
+
+Après cela, les sessions suivantes récupèrent automatiquement le dépôt.
+
+## 4. Ordre de travail
 
 1. Récupération du dépôt.
 2. Montage Drive.
@@ -68,4 +76,3 @@ La variable `GITHUB_REPO` du notebook doit contenir l'URL de TON dépôt GitHub 
 6. Inférence Niveau 1.
 7. Écoute et validation Niveau 2.
 8. Entraînement Niveau 3 uniquement après validation des deux premiers niveaux.
-

@@ -121,7 +121,9 @@ def main():
         if index_files:
             print(f"✅ Fichier(s) .index : {[p.name for p in index_files]}")
         else:
-            print("⚠️ Aucun fichier .index (optionnel, mais réduit la précision).")
+            print("❌ Aucun fichier .index trouvé.")
+            print("   → La CLI actuelle d'Applio exige --index-path pour l'inférence.")
+            problems.append("Fichier .index manquant")
     else:
         print(f"❌ Dossier modèle introuvable : {backup_dir}")
         print("   → Vérifie que Google Drive est bien monté et que le modèle")

@@ -2,7 +2,7 @@
 
 ## Vue d'ensemble
 
-```
+```text
                     GITHUB (ce dépôt)
                           │
                     code, notebook,
@@ -12,9 +12,9 @@
               NOUVEAU RUNTIME COLAB/KAGGLE
                     (jetable, temporaire)
                           │
-              1. clone ce dépôt
-              2. installe Applio (scripts/setup.py)
-              3. vérifie l'environnement (check_environment.py)
+              1. clone / mise à jour du dépôt
+              2. installe Applio + Python 3.12
+              3. vérifie l'environnement
                           │
                           ▼
                    GOOGLE DRIVE
@@ -39,32 +39,24 @@ ApplioBackup/     Darwin_Dataset/  ma_voix.wav   ApplioExported/
 
 ## Pourquoi cette séparation
 
-- **GitHub** ne contient jamais de fichier lourd. Un dépôt Git n'est pas
-  fait pour stocker des modèles de plusieurs centaines de Mo — au-delà de
-  100 Mo, GitHub refuse même le fichier.
-- **Google Drive** persiste indéfiniment, indépendamment de la durée de vie
-  d'une session de calcul. C'est là que vivent les fichiers qui ont pris du
-  temps à produire (le modèle entraîné, le dataset).
-- **Colab/Kaggle** est jetable par nature : une session peut expirer,
-  atteindre une limite GPU, ou simplement être fermée. Rien d'important ne
-  doit dépendre de son état interne au-delà d'une session.
+- **GitHub** ne contient que le code, le notebook, les scripts et la configuration d'exemple.
+- **Google Drive** conserve le modèle, l'index, le dataset, l'audio source et les exports.
+- **Colab/Kaggle** fournit uniquement le calcul temporaire. Une session peut disparaître sans supprimer les données persistantes.
 
 ## Les trois niveaux
 
 | Niveau | Objectif | Script | Pré-requis |
 |---|---|---|---|
-| 1 | Faire fonctionner l'inférence avec `darwin` | `inference.py` | Modèle déjà présent sur Drive |
-| 2 | Juger si le résultat est exploitable musicalement | (écoute manuelle) | Niveau 1 validé |
+| 1 | Faire fonctionner l'inférence avec `darwin` | `inference.py` | `.pth` + `.index` présents sur Drive |
+| 2 | Juger si le résultat est exploitable musicalement | écoute | Niveau 1 validé |
 | 3 | Entraîner/améliorer le modèle `darwin` | `train.py` | Niveau 2 jugé satisfaisant |
 
-Ne jamais passer au niveau suivant avant d'avoir validé le précédent — c'est
-ce qui a causé de la confusion dans les versions précédentes du projet.
+Ne jamais passer au niveau suivant avant d'avoir validé le précédent.
 
-## Compatibilité Kaggle
+## Point important sur l'index
 
-Le script `check_environment.py` détecte simplement si un GPU est
-disponible, sans jamais supposer un modèle précis (T4, P100...) ni une
-durée de session garantie. Cette approche fonctionne identiquement sur
-Colab et sur Kaggle — seul le clonage initial du dépôt et le montage du
-stockage (Drive vs Kaggle Datasets) diffèrent, le reste du pipeline
-(`setup.py`, `inference.py`, `train.py`) est indépendant de la plateforme.
+La CLI actuelle d'Applio déclare `--index-path` comme argument requis pour `infer`. Le pipeline exige donc désormais explicitement `darwin.index` avant de lancer le Niveau 1. Le script cherche d'abord l'index portant le même nom de base que le `.pth`, puis utilise le dernier `.index` disponible dans le dossier si nécessaire.
+
+## Compatibilité Colab/Kaggle
+
+Le notebook utilise un environnement Python 3.12 isolé dans le runtime. Le dépôt reste indépendant de la plateforme ; seul le stockage persistant diffère entre Google Drive et un stockage Kaggle équivalent.

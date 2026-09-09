@@ -72,6 +72,7 @@ def main():
             "--sample-rate", str(sr),
             "--cpu-cores", str(cpu_cores),
             "--cut-preprocess", "Automatic",
+            "--noise-reduction",
             "--noise-reduction-strength", "0.7",
             "--chunk-len", "3.0",
             "--overlap-len", "0.3",
