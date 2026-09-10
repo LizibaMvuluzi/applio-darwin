@@ -5,6 +5,8 @@ Cette version a été réexaminée et corrigée directement à partir du ZIP fou
 ## Contrôles réalisés
 
 - intégrité ZIP : OK
+- correction du bug bloquant `NameError: re is not defined` dans `setup.py`
+- écriture effective du verrou `applio_commit.lock` après résolution du commit
 - syntaxe Python des 4 scripts : OK
 - JSON de configuration : OK
 - notebook nbformat 4 valide : OK

@@ -10,6 +10,7 @@ Usage:
 
 import argparse
 import json
+import re
 import shutil
 import subprocess
 import sys
@@ -134,6 +135,12 @@ def main():
         else:
             print("⚠️ Fichier de verrouillage Applio invalide — il sera recréé.")
     sha = clone_applio(repo_url, effective_ref, install_dir)
+
+    # Persister le commit réellement utilisé afin que les sessions suivantes
+    # réutilisent exactement la même version d'Applio.
+    lock_path.parent.mkdir(parents=True, exist_ok=True)
+    lock_path.write_text(sha + "\n", encoding="utf-8")
+    print(f"🔒 Commit Applio enregistré sur Drive : {lock_path}")
 
     print("\n🧰 Préparation d'un environnement Python 3.12 isolé...")
     if not uv_bin.exists():

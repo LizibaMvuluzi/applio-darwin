@@ -154,3 +154,8 @@ manuelle du code n'est nécessaire.
 
 Pour volontairement revenir à la branche `main`, supprimer le fichier
 `applio_commit.lock` de `ApplioExported/` avant une nouvelle session.
+
+
+## Erreur `NameError: name 're' is not defined`
+
+Cette erreur appartenait à une version précédente de `scripts/setup.py`. La version corrigée importe désormais le module `re` et ne nécessite aucune modification manuelle dans Colab.
