@@ -1,15 +1,57 @@
-# Local configuration / secrets
+# Modèles et fichiers lourds — restent sur Google Drive, jamais dans Git
+*.pth
+*.index
+*.ckpt
+*.onnx
+*.pt
+
+# Audio
+*.wav
+*.mp3
+*.flac
+*.ogg
+*.m4a
+
+# Datasets
+dataset/
+*_Dataset/
+datasets/
+
+# Archives / exports
+*.zip
+*.tar
+*.tar.gz
+
+# Configuration locale — seul config.example.json est versionné
 config/config.json
 
-# Python
+# Environnements et caches Python
 __pycache__/
-*.py[cod]
+*.pyc
 *.pyo
+.venv/
+venv/
+applio-env/
+env/
+*.egg-info/
 
-# Jupyter
+# Notebooks
 .ipynb_checkpoints/
 
-# Local runtime / generated files
+# Applio lui-même (cloné à chaque session, jamais versionné ici)
+Applio/
+
+# Logs
 *.log
+/tmp/
+
+# Secrets — ne doivent JAMAIS être commités
+*.env
+credentials.json
+token.json
+*.key
+service_account*.json
+
+# Système
 .DS_Store
 Thumbs.db

@@ -55,8 +55,16 @@ Ne jamais passer au niveau suivant avant d'avoir validé le précédent.
 
 ## Point important sur l'index
 
-La CLI actuelle d'Applio déclare `--index-path` comme argument requis pour `infer`. Le pipeline exige donc désormais explicitement `darwin.index` avant de lancer le Niveau 1. Le script cherche d'abord l'index portant le même nom de base que le `.pth`, puis utilise le dernier `.index` disponible dans le dossier si nécessaire.
+La CLI actuelle d'Applio déclare `--index-path` comme argument requis pour
+`infer`. Le pipeline exige donc exactement `darwin.index` avant de lancer le
+Niveau 1. Aucun autre `.index` n'est sélectionné automatiquement.
 
-## Compatibilité Colab/Kaggle
+## Compatibilité Colab
 
-Le notebook utilise un environnement Python 3.12 isolé dans le runtime. Le dépôt reste indépendant de la plateforme ; seul le stockage persistant diffère entre Google Drive et un stockage Kaggle équivalent.
+Le workflow cible Google Colab avec GPU CUDA. Le notebook bloque avant
+l'installation si aucun GPU n'est attribué. `setup.py` installe Python 3.12
+dans un environnement isolé, vérifie PyTorch/CUDA dans ce même environnement,
+puis télécharge uniquement les ressources nécessaires au Niveau 1.
+
+La version d'Applio est verrouillée automatiquement sur Drive après sa première
+résolution, via `ApplioExported/applio_commit.lock`.

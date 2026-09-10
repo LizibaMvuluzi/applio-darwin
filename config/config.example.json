@@ -1,5 +1,5 @@
 {
-  "_comment": "Copie ce fichier en config.json. config.json n'est jamais versionné.",
+  "_comment": "Copie ce fichier en config.json. config.json n'est jamais versionné. Le projet est verrouillé sur le modèle darwin.",
   "model_name": "darwin",
   "drive": {
     "root": "/content/drive/MyDrive",
@@ -38,6 +38,9 @@
     "total_epoch": 800,
     "batch_size": 8,
     "save_every_epoch": 10,
-    "vocoder": "HiFi-GAN"
+    "vocoder": "HiFi-GAN",
+    "process_effects": false,
+    "noise_reduction": true,
+    "noise_reduction_strength": 0.7
   }
 }

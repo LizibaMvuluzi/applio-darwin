@@ -72,7 +72,17 @@ Après cela, les sessions suivantes récupèrent automatiquement le dépôt.
 2. Montage Drive.
 3. Création automatique de `config/config.json`.
 4. Installation automatique d'Applio.
-5. Diagnostic.
-6. Inférence Niveau 1.
-7. Écoute et validation Niveau 2.
-8. Entraînement Niveau 3 uniquement après validation des deux premiers niveaux.
+5. Vérification GPU.
+6. Installation d'Applio + Python 3.12.
+7. Diagnostic strict.
+8. Inférence Niveau 1.
+9. Écoute et validation Niveau 2.
+10. Entraînement Niveau 3 uniquement après validation des deux premiers niveaux.
+
+
+## Verrouillage automatique de la version Applio
+
+La première installation résout `main`, récupère le SHA réel et le sauvegarde
+dans `MyDrive/ApplioExported/applio_commit.lock`. Les sessions suivantes
+réutilisent automatiquement ce SHA. Cela évite qu'une modification ultérieure
+de `main` change silencieusement le comportement du pipeline.

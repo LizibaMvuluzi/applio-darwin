@@ -68,3 +68,19 @@ Le notebook est déjà configuré pour le dépôt `LizibaMvuluzi/applio-darwin`.
 ## En cas de problème
 
 Consulte `docs/TROUBLESHOOTING.md` : dépôt privé, modèle/index manquant, audio manquant, ressources Applio, GPU et logs d'inférence y sont couverts.
+
+
+## Sécurité du workflow
+
+Le Niveau 1 exige un GPU CUDA et vérifie ce GPU dans le même environnement
+Python que celui utilisé par Applio. `darwin.pth` et `darwin.index` doivent
+porter exactement ces noms. La CLI `core.py infer --help` est contrôlée juste
+avant chaque inférence et la sortie WAV est validée avant d'être déclarée
+réussie.
+
+Le Niveau 3 reste désactivé par défaut. Les commandes d'entraînement sont
+protégées par la même vérification CLI et ne téléchargent leurs ressources
+spécifiques qu'au moment où l'entraînement est volontairement activé.
+
+La version d'Applio est verrouillée automatiquement après la première
+résolution via `ApplioExported/applio_commit.lock` sur Google Drive.

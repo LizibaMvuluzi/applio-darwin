@@ -1,24 +1,21 @@
 """
-check_environment.py — Diagnostic complet avant inférence ou entraînement.
+check_environment.py — Préflight strict avant Niveau 1.
 
-Vérifie, dans l'ordre, tout ce qui peut manquer :
-- installation d'Applio et point d'entrée (core.py)
-- ressources critiques (RMVPE, ContentVec)
-- disponibilité GPU
-- présence du modèle (.pth + .index)
-- présence et lisibilité du fichier audio source
+Bloquant si :
+- Applio/core.py absent ;
+- Python/PyTorch/CUDA du venv Applio n'est pas exploitable ;
+- GPU CUDA absent ;
+- darwin.pth ou darwin.index exacts manquants/vides ;
+- audio source absent/invalide.
 
-N'échoue jamais silencieusement : chaque vérification affiche clairement
-✅ ou ❌, et explique quoi faire en cas de problème.
-
-Usage :
-    python scripts/check_environment.py --config config/config.json
+Les ressources Applio téléchargées par `prerequisites --models --exe` sont
+signalées à titre informatif ; leur chargement réel est validé par l'inférence.
 """
 
 import argparse
 import json
-import subprocess
 import sys
+import wave
 from pathlib import Path
 
 
@@ -33,126 +30,112 @@ def section(title):
     print("=" * 60)
 
 
+def validate_wav(path: Path):
+    if not path.exists():
+        return False, "fichier absent"
+    if path.stat().st_size == 0:
+        return False, "fichier vide"
+    try:
+        with wave.open(str(path), "rb") as wf:
+            frames = wf.getnframes()
+            rate = wf.getframerate()
+            duration = frames / rate if rate else 0
+            if duration <= 0:
+                return False, "durée nulle"
+            return True, f"{duration:.2f}s · {rate} Hz"
+    except (wave.Error, EOFError) as exc:
+        return False, f"WAV illisible : {exc}"
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", default="config/config.json")
     args = parser.parse_args()
 
     config = load_config(args.config)
-    problems = []
+    if config.get("model_name") != "darwin":
+        print("❌ model_name doit être exactement 'darwin'.")
+        sys.exit(1)
 
     install_dir = Path(config["applio"]["install_dir"])
-    model_name = config["model_name"]
     drive_root = Path(config["drive"]["root"])
-    backup_dir = drive_root / config["drive"]["backup_folder"] / model_name
+    backup_dir = drive_root / config["drive"]["backup_folder"] / "darwin"
     audio_path = drive_root / config["drive"]["input_audio"]
+    problems = []
 
-    # 1. Applio installé ?
     section("1. INSTALLATION APPLIO")
     core_py = install_dir / "core.py"
     if core_py.exists():
         print(f"✅ core.py trouvé : {core_py}")
     else:
         print(f"❌ core.py introuvable dans {install_dir}")
-        print("   → Lance d'abord : python scripts/setup.py --config config/config.json")
         problems.append("Applio non installé")
 
-    # 2. Version Applio (si détectable)
-    if core_py.exists():
-        try:
-            result = subprocess.run(
-                [sys.executable, "core.py", "--version"],
-                cwd=str(install_dir), capture_output=True, text=True, timeout=30,
-            )
-            print(f"   Version : {result.stdout.strip() or '(non détectée)'}")
-        except Exception as e:
-            print(f"   ⚠️ Impossible de lire la version : {e}")
-
-    # 3. Ressources critiques (RMVPE, ContentVec)
-    section("2. RESSOURCES CRITIQUES")
-    if install_dir.exists():
-        rmvpe_found = list(install_dir.rglob("*rmvpe*"))
-        embedder_found = list(install_dir.rglob("*contentvec*")) + list(install_dir.rglob("*hubert*"))
-
-        print(f"RMVPE : {len(rmvpe_found)} fichier(s) trouvé(s)")
-        for p in rmvpe_found[:3]:
-            print(f"   {p}")
-        if not rmvpe_found:
-            print("   ❌ Aucun fichier RMVPE — réexécute scripts/setup.py")
-            problems.append("RMVPE manquant")
-
-        print(f"Embedder (ContentVec/Hubert) : {len(embedder_found)} fichier(s) trouvé(s)")
-        for p in embedder_found[:3]:
-            print(f"   {p}")
-        if not embedder_found:
-            print("   ❌ Aucun embedder — réexécute scripts/setup.py")
-            problems.append("Embedder manquant")
-    else:
-        print("⏭️  Ignoré (Applio non installé)")
-
-    # 4. GPU
-    section("3. GPU")
+    section("2. PYTHON / PYTORCH / CUDA")
+    print(f"Interpréteur Python : {sys.executable}")
+    print(f"Version Python      : {sys.version.split()[0]}")
+    if "applio-env" not in str(Path(sys.executable)):
+        problems.append("Mauvais interpréteur Python")
+        print("❌ Ce script doit être exécuté avec le Python du venv Applio.")
     try:
         import torch
+        print(f"Version PyTorch     : {torch.__version__}")
+        print(f"CUDA compilé dans PyTorch : {torch.version.cuda or '(CPU only)'}")
         if torch.cuda.is_available():
             name = torch.cuda.get_device_name(0)
             mem_total = torch.cuda.get_device_properties(0).total_memory / (1024 ** 3)
-            print(f"✅ GPU détecté : {name} ({mem_total:.1f} Go VRAM)")
+            print(f"✅ GPU CUDA détecté : {name} ({mem_total:.1f} Go VRAM)")
         else:
-            print("⚠️ Aucun GPU détecté — l'inférence fonctionnera mais lentement (CPU).")
-            print("   Ce n'est jamais garanti sur le plan gratuit de Colab/Kaggle.")
-    except ImportError:
-        print("⚠️ PyTorch non installé — impossible de vérifier le GPU pour l'instant.")
-        print("   Normal si scripts/setup.py n'a pas encore été exécuté.")
+            print("❌ Aucun GPU CUDA exploitable.")
+            print("   Dans Colab : Runtime → Change runtime type → GPU, puis relance.")
+            problems.append("GPU CUDA absent")
+    except Exception as exc:
+        print(f"❌ PyTorch/CUDA non exploitable : {exc}")
+        problems.append("PyTorch/CUDA indisponible")
 
-    # 5. Modèle (.pth + .index)
-    section("4. MODÈLE 'darwin'")
+    section("3. MODÈLE 'darwin' — CORRESPONDANCE STRICTE")
     if backup_dir.exists():
-        print(f"✅ Dossier modèle trouvé : {backup_dir}")
-        pth_files = list(backup_dir.glob("*.pth"))
-        index_files = list(backup_dir.glob("*.index"))
-
-        if pth_files:
-            print(f"✅ Fichier(s) .pth : {[p.name for p in pth_files]}")
+        expected_pth = backup_dir / "darwin.pth"
+        expected_index = backup_dir / "darwin.index"
+        if expected_pth.is_file() and expected_pth.stat().st_size > 0:
+            print(f"✅ darwin.pth trouvé ({expected_pth.stat().st_size / 1024 / 1024:.1f} Mo)")
         else:
-            print("❌ Aucun fichier .pth trouvé.")
-            problems.append("Fichier .pth manquant")
-
-        if index_files:
-            print(f"✅ Fichier(s) .index : {[p.name for p in index_files]}")
+            print(f"❌ darwin.pth absent ou vide : {expected_pth}")
+            problems.append("darwin.pth manquant/vide")
+        if expected_index.is_file() and expected_index.stat().st_size > 0:
+            print(f"✅ darwin.index trouvé ({expected_index.stat().st_size / 1024 / 1024:.1f} Mo)")
         else:
-            print("❌ Aucun fichier .index trouvé.")
-            print("   → La CLI actuelle d'Applio exige --index-path pour l'inférence.")
-            problems.append("Fichier .index manquant")
+            print(f"❌ darwin.index absent ou vide : {expected_index}")
+            problems.append("darwin.index manquant/vide")
     else:
         print(f"❌ Dossier modèle introuvable : {backup_dir}")
-        print("   → Vérifie que Google Drive est bien monté et que le modèle")
-        print("     'darwin' a bien été sauvegardé dans ApplioBackup/darwin/")
         problems.append("Dossier modèle introuvable")
 
-    # 6. Audio source
-    section("5. AUDIO SOURCE")
-    if audio_path.exists():
-        size_mb = audio_path.stat().st_size / (1024 * 1024)
-        print(f"✅ Fichier audio trouvé : {audio_path} ({size_mb:.2f} Mo)")
-        if size_mb == 0:
-            print("❌ Le fichier fait 0 Mo — probablement corrompu ou vide.")
-            problems.append("Fichier audio vide")
+    section("4. AUDIO SOURCE")
+    ok, detail = validate_wav(audio_path)
+    if ok:
+        print(f"✅ Audio valide : {audio_path} — {detail}")
     else:
-        print(f"❌ Fichier audio introuvable : {audio_path}")
-        problems.append("Fichier audio introuvable")
+        print(f"❌ Audio invalide : {audio_path} — {detail}")
+        problems.append("Audio source invalide")
 
-    # Résumé
+    section("5. RESSOURCES APPLIO")
+    # On ne prétend pas qu'un simple nom de fichier prouve le chargement.
+    # prerequisites + l'inférence réelle constituent la validation fiable.
+    print("ℹ️ RMVPE / ContentVec sont téléchargés par setup.py via")
+    print("   `core.py prerequisites --models --exe`.")
+    print("ℹ️ Leur chargement effectif sera confirmé par l'inférence Niveau 1.")
+
     section("RÉSUMÉ")
     if problems:
-        print(f"❌ {len(problems)} problème(s) détecté(s) :")
-        for p in problems:
-            print(f"   - {p}")
-        print("\nCorrige ces points avant de lancer scripts/inference.py")
+        print(f"❌ {len(problems)} problème(s) bloquant(s) :")
+        for problem in problems:
+            print(f"   - {problem}")
+        print("\nAucune inférence ne doit être lancée.")
         sys.exit(1)
-    else:
-        print("✅ Tout est en ordre. Tu peux lancer :")
-        print("   python scripts/inference.py --config config/config.json")
+
+    print("✅ Préflight réussi : environnement GPU, modèle et audio sont prêts.")
+    print("   L'inférence effectuera une seconde vérification de la CLI Applio.")
 
 
 if __name__ == "__main__":
