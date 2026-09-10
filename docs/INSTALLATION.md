@@ -71,9 +71,8 @@ Après cela, les sessions suivantes récupèrent automatiquement le dépôt.
 1. Récupération du dépôt.
 2. Montage Drive.
 3. Création automatique de `config/config.json`.
-4. Installation automatique d'Applio.
-5. Vérification GPU.
-6. Installation d'Applio + Python 3.12.
+4. Vérification GPU.
+5. Installation automatique d'Applio + Python 3.12.
 7. Diagnostic strict.
 8. Inférence Niveau 1.
 9. Écoute et validation Niveau 2.

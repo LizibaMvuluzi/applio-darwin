@@ -114,7 +114,8 @@ def main():
     python_env_dir = Path(
         config.get("runtime", {}).get("python_env_dir", "/content/applio-env")
     )
-    uv_bin = Path.home() / ".local" / "bin" / "uv"
+    # On Colab, the uv executable location can vary. Use uv through the current Python.
+    uv_cmd = [sys.executable, "-m", "uv"]
 
     print("=" * 60)
     print("SETUP — Installation d'Applio")
@@ -143,24 +144,17 @@ def main():
     print(f"🔒 Commit Applio enregistré sur Drive : {lock_path}")
 
     print("\n🧰 Préparation d'un environnement Python 3.12 isolé...")
-    if not uv_bin.exists():
-        run([
-            "curl", "-LsSf",
-            "https://astral.sh/uv/install.sh",
-            "-o", "/tmp/install_uv.sh"
-        ])
-        run(["sh", "/tmp/install_uv.sh"])
-    if not uv_bin.exists():
-        raise FileNotFoundError("uv n'a pas été installé à l'emplacement attendu.")
-
-    run([str(uv_bin), "python", "install", "3.12"])
+    # Install uv through the system Python to avoid PATH problems in Colab.
+    run([sys.executable, "-m", "pip", "install", "-q", "uv"])
+    run(uv_cmd + ["--version"])
+    run(uv_cmd + ["python", "install", "3.12"])
 
     # Un runtime Colab neuf ne possède normalement pas cet environnement.
     # S'il existe déjà, on le recrée pour éviter une contamination par une
     # ancienne installation.
     if python_env_dir.exists():
         shutil.rmtree(python_env_dir)
-    run([str(uv_bin), "venv", "--python", "3.12", str(python_env_dir)])
+    run(uv_cmd + ["venv", "--python", "3.12", str(python_env_dir)])
 
     venv_python = python_env_dir / "bin" / "python"
     if not venv_python.exists():
@@ -169,7 +163,7 @@ def main():
     print("\n📦 Installation des dépendances Applio...")
     run(
         [
-            str(uv_bin), "pip", "install", "--python", str(venv_python), "-q",
+            *uv_cmd, "pip", "install", "--python", str(venv_python), "-q",
             "-r", "requirements.txt",
             "--extra-index-url", PYTORCH_INDEX,
             "--index-strategy", "unsafe-best-match",
@@ -180,7 +174,7 @@ def main():
     print("\n🎯 Installation explicite des wheels PyTorch CUDA 12.8...")
     run(
         [
-            str(uv_bin), "pip", "install", "--python", str(venv_python), "-q",
+            *uv_cmd, "pip", "install", "--python", str(venv_python), "-q",
             "--index-url", PYTORCH_INDEX,
             "--extra-index-url", "https://pypi.org/simple",
             "torch==2.11.0", "torchaudio==2.11.0",
@@ -215,7 +209,7 @@ def main():
     print("\n📦 Téléchargement des ressources Niveau 1 (RMVPE, embedders, ffmpeg)...")
     print("   --pretraineds-hifigan est volontairement réservé au Niveau 3.")
     run(
-        [str(venv_python), "core.py", "prerequisites", "--models", "--exe"],
+        [str(venv_python), "core.py", "prerequisites", "--no-pretraineds-hifigan", "--models", "--exe"],
         cwd=str(install_dir),
     )
 

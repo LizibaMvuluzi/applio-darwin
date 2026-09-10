@@ -4,8 +4,10 @@ train.py — NIVEAU 3 : entraînement / amélioration du modèle 'darwin'.
 ⚠️ NE PAS UTILISER avant d'avoir validé le Niveau 1 (inference.py) et le
 Niveau 2 (qualité du résultat jugée satisfaisante à l'oreille).
 
-Ce script encapsule les quatre étapes d'entraînement RVC dans l'ordre
-obligatoire : preprocess → extract → index → train.
+Ce script encapsule les étapes d'entraînement RVC dans l'ordre
+utile pour la version actuelle d'Applio : preprocess → extract → train.
+La génération de l'index est effectuée automatiquement par la commande train
+à la fin de l'entraînement dans la CLI actuelle d'Applio.
 Utilise "darwin" (minuscule) partout — voir docs/TROUBLESHOOTING.md pour
 l'historique du bug Darwin/darwin corrigé ici.
 
@@ -23,8 +25,7 @@ fait foi.
 Usage :
     python scripts/train.py --config config/config.json --step preprocess
     python scripts/train.py --config config/config.json --step extract
-    python scripts/train.py --config config/config.json --step index
-    python scripts/train.py --config config/config.json --step train
+        python scripts/train.py --config config/config.json --step train
 """
 
 import argparse
