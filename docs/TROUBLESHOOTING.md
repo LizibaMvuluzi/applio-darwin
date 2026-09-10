@@ -159,3 +159,29 @@ Pour volontairement revenir à la branche `main`, supprimer le fichier
 ## Erreur `NameError: name 're' is not defined`
 
 Cette erreur appartenait à une version précédente de `scripts/setup.py`. La version corrigée importe désormais le module `re` et ne nécessite aucune modification manuelle dans Colab.
+
+## Crash à l'import de Matplotlib pendant `core.py prerequisites`
+
+**Symptôme réel observé en test Colab :** l'installation avançait bien
+au-delà des étapes précédentes (Python 3.12, création de
+`/content/applio-env` confirmées dans les logs), puis échouait pendant
+`core.py prerequisites --no-pretraineds-hifigan --models --exe`, avec une
+trace remontant à `import matplotlib.pyplot as plt` dans
+`rvc/lib/tools/analyzer.py`.
+
+**Cause réelle :** le venv Applio est un environnement Python isolé créé
+par `uv`, complètement séparé du kernel Jupyter/IPython de Colab. Colab
+préconfigure son propre kernel avec un backend Matplotlib "inline" adapté
+à l'affichage headless — mais cette configuration n'existe pas dans notre
+venv isolé. Sans backend explicite, Matplotlib tente de deviner un backend
+interactif (Tk/Qt) au premier `import matplotlib.pyplot`, qui n'est pas
+disponible dans ce venv minimal, et l'import échoue. C'est un problème
+d'environnement bien documenté, pas un bug d'Applio ni de nos scripts.
+
+**Correction :** chaque appel à `core.py` (dans `setup.py`, `inference.py`,
+`train.py`) fixe désormais explicitement `MPLBACKEND=Agg` dans
+l'environnement du sous-processus. Agg est le backend non-interactif
+standard de Matplotlib — celui recommandé par Matplotlib lui-même pour les
+environnements headless/CI, il ne modifie ni ne contourne le comportement
+d'Applio, il évite seulement la détection automatique fragile d'un backend
+graphique absent.

@@ -14,11 +14,17 @@ Usage:
 
 import argparse
 import json
+import os
 import subprocess
 import sys
 import wave
 from datetime import datetime
 from pathlib import Path
+
+# Voir setup.py pour l'explication complète : le venv Applio isolé a besoin
+# d'un backend Matplotlib non-interactif explicite pour ne pas planter à
+# l'import de core.py (via rvc/lib/tools/analyzer.py).
+APPLIO_ENV = {**os.environ, "MPLBACKEND": "Agg"}
 
 
 def load_config(config_path: str) -> dict:
@@ -172,7 +178,7 @@ def main():
     # Contrat CLI réel de la version Applio installée.
     help_result = subprocess.run(
         [sys.executable, "core.py", "infer", "--help"],
-        cwd=str(install_dir), capture_output=True, text=True, timeout=60,
+        cwd=str(install_dir), capture_output=True, text=True, timeout=60, env=APPLIO_ENV,
     )
     help_text = help_result.stdout + help_result.stderr
     if help_result.returncode != 0:
@@ -194,7 +200,7 @@ def main():
 
     log("\nCommande exécutée :")
     log(" ".join(cmd))
-    result = subprocess.run(cmd, cwd=str(install_dir), capture_output=True, text=True)
+    result = subprocess.run(cmd, cwd=str(install_dir), capture_output=True, text=True, env=APPLIO_ENV)
 
     log(f"\nCode de retour : {result.returncode}")
     log("\n--- STDOUT ---")

@@ -10,6 +10,7 @@ Usage:
 
 import argparse
 import json
+import os
 import re
 import shutil
 import subprocess
@@ -18,6 +19,15 @@ from pathlib import Path
 
 
 PYTORCH_INDEX = "https://download.pytorch.org/whl/cu128"
+
+# Le venv Applio est isolé et n'hérite pas de la configuration "inline" que
+# Colab applique à son propre kernel Jupyter. Sans backend explicite,
+# `import matplotlib.pyplot` (utilisé par rvc/lib/tools/analyzer.py) peut
+# tenter de détecter un backend interactif (Tk/Qt) absent de ce venv minimal,
+# et planter. Agg est le backend non-interactif standard, recommandé par
+# Matplotlib lui-même pour les environnements headless/CI — on le fixe pour
+# CHAQUE appel à core.py, jamais en dur dans le code d'Applio.
+APPLIO_ENV = {**os.environ, "MPLBACKEND": "Agg"}
 
 
 def load_config(config_path: str) -> dict:
@@ -210,7 +220,7 @@ def main():
     print("   --pretraineds-hifigan est volontairement réservé au Niveau 3.")
     run(
         [str(venv_python), "core.py", "prerequisites", "--no-pretraineds-hifigan", "--models", "--exe"],
-        cwd=str(install_dir),
+        cwd=str(install_dir), env=APPLIO_ENV,
     )
 
     config_template = install_dir / "assets" / "config_template.json"

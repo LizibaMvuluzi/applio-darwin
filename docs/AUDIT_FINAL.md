@@ -24,6 +24,11 @@ intégrées dans cette version corrigée.
 - conservation de la validation stricte de `darwin.pth`, `darwin.index` et du
   WAV d'entrée/sortie ;
 - conservation du verrouillage automatique du commit Applio sur Google Drive.
+- **correction du crash Matplotlib pendant `core.py prerequisites`** : le venv
+  Applio isolé n'hérite pas de la configuration "inline" du kernel Colab.
+  `MPLBACKEND=Agg` est désormais fixé explicitement pour chaque appel à
+  `core.py` (`setup.py`, `inference.py`, `train.py`) — testé fonctionnellement,
+  pas seulement déduit (voir docs/TROUBLESHOOTING.md).
 
 ## Contrôles statiques réalisés
 

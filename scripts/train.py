@@ -30,10 +30,14 @@ Usage :
 
 import argparse
 import json
+import os
 import subprocess
 import sys
 from multiprocessing import cpu_count
 from pathlib import Path
+
+# Voir setup.py pour l'explication complète du backend Matplotlib headless.
+APPLIO_ENV = {**os.environ, "MPLBACKEND": "Agg"}
 
 
 def load_config(config_path: str) -> dict:
@@ -52,7 +56,7 @@ def verify_flags_exist(python_bin, install_dir, subcommand, cmd):
     une simple incertitude."""
     help_result = subprocess.run(
         [python_bin, "core.py", subcommand, "--help"],
-        cwd=str(install_dir), capture_output=True, text=True,
+        cwd=str(install_dir), capture_output=True, text=True, env=APPLIO_ENV,
     )
     help_text = help_result.stdout + help_result.stderr
 
@@ -88,7 +92,7 @@ def verify_flags_exist(python_bin, install_dir, subcommand, cmd):
 
 def run(cmd, cwd):
     print(f"$ {' '.join(cmd)}")
-    result = subprocess.run(cmd, cwd=cwd, capture_output=True, text=True)
+    result = subprocess.run(cmd, cwd=cwd, capture_output=True, text=True, env=APPLIO_ENV)
     print(result.stdout or "(vide)")
     if result.returncode != 0:
         print("--- STDERR ---")
