@@ -19,7 +19,7 @@
   "inference": {
     "f0_method": "rmvpe",
     "pitch": 0,
-    "index_rate": 0.7,
+    "index_rate": 0.2,
     "protect": 0.5,
     "volume_envelope": 0.8,
     "embedder_model": "contentvec",
